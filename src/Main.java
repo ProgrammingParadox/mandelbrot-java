@@ -47,6 +47,9 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        frame.addMouseListener(this);
+        frame.addMouseMotionListener(this);
+
         t = new Thread(this);
         t.start();
     }
@@ -60,6 +63,9 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        frame.addMouseListener(this);
+        frame.addMouseMotionListener(this);
+
         t = new Thread(this);
         t.start();
     }
@@ -68,10 +74,15 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
         img = new BufferedImage(frameWidth, frameHeight, BufferedImage.TYPE_INT_RGB);
 
+        // init frame
         frame.add(this);
         frame.setSize(frameWidth, frameHeight);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // events
+        frame.addMouseListener(this);
+        frame.addMouseMotionListener(this);
 
         t = new Thread(this);
         t.start();
@@ -132,8 +143,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         for(int y = 0; y < height; y++){
             for(int x = 0; x < width; x++){
 
-                double scaledX = ((x * dw) * ww) + X_SCALE_MIN;
-                double scaledY = ((y * dh) * hh) + Y_SCALE_MIN;
+                double scaledX = (((double) x * dw) * ww) + X_SCALE_MIN;
+                double scaledY = (((double) y * dh) * hh) + Y_SCALE_MIN;
 
                 int[] fill = renderPixel(scaledX, scaledY);
 
@@ -141,6 +152,22 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
             }
         }
     }
+
+    /*
+    int height = data.getHeight();
+    int width = data.getWidth();
+
+    double dh = 1.0 / height;
+    double dw = 1.0 / width;
+
+    double ww = (Math.abs(X_SCALE_MAX) + Math.abs(X_SCALE_MIN));
+    double hh = (Math.abs(Y_SCALE_MAX) + Math.abs(Y_SCALE_MIN));
+    private double scaleX(double x){
+        double scaledX = ((x * dw) * ww) + X_SCALE_MIN;
+        double scaledY = ((y * dh) * hh) + Y_SCALE_MIN;
+    }
+
+     */
 
     private int[] renderPixel(double scaledX, double scaledY) {
         double a = 0.0;
@@ -188,6 +215,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
     @Override
     public void mouseDragged(MouseEvent e) {
+        this.repaint(new Rectangle(0, 0, frameWidth, frameHeight));
         // redraw I guess
     }
 
@@ -197,6 +225,10 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         end_y = e.getY();
         
         dragging = false;
+
+        // System.out.println("Allegedly, the mouse has been released");
+
+        renderFractal();
     }
 
     @Override
