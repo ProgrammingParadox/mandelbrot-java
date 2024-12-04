@@ -3,11 +3,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.util.ArrayList;
 
-public class Main extends JPanel implements Runnable, MouseListener {
+public class Main extends JPanel implements Runnable, MouseListener, MouseMotionListener {
     private JFrame frame;
 
     Thread t;
@@ -106,6 +107,18 @@ public class Main extends JPanel implements Runnable, MouseListener {
         );
         g2d.setRenderingHints(rh);
 
+        // draw
+//        g2d.setPaint(new Color(50, 100, 200, 255));
+//        g2d.fillRoundRect(0, 0, 20, 20, 4, 4);
+//
+//        g2d.setPaint(new Color(25, 50, 100, 255));
+//        g2d.setStroke(new BasicStroke(4));
+//        g2d.drawRoundRect(0, 0, 20, 20, 4, 4);
+
+        g2d.drawImage(img, 0, 0, null);
+    }
+
+    private void renderFractal() {
         WritableRaster data = img.getRaster();
 
         int height = data.getHeight();
@@ -122,43 +135,33 @@ public class Main extends JPanel implements Runnable, MouseListener {
                 double scaledX = ((x * dw) * ww) + X_SCALE_MIN;
                 double scaledY = ((y * dh) * hh) + Y_SCALE_MIN;
 
-                //double scaledX = 0;
-                //double scaledY = 0;
-
-                double a = 0.0;
-                double b = 0.0;
-                int itr = 0;
-                while(
-                        (a * a) + (b * b) <= 4 &&
-                        itr < 1000 // (max itr)
-                ){
-                    double temp = (a * a) - (b * b) + scaledX;
-                    b = 2 * a * b + scaledY;
-                    a = temp;
-
-                    itr++;
-                }
-
-                itr = 1000 - itr;
-
-                int color = (int) (Math.log(itr) * Math.log(1000) * 255);
-
-                int[] fill = new int[]{color, color, color, 255};
+                int[] fill = renderPixel(scaledX, scaledY);
 
                 data.setPixel(x, y, fill);
             }
         }
+    }
 
+    private int[] renderPixel(double scaledX, double scaledY) {
+        double a = 0.0;
+        double b = 0.0;
+        int itr = 0;
+        while(
+                (a * a) + (b * b) <= 4 &&
+                        itr < 1000 // (max itr)
+        ){
+            double temp = (a * a) - (b * b) + scaledX;
+            b = 2 * a * b + scaledY;
+            a = temp;
 
-        // draw
-//        g2d.setPaint(new Color(50, 100, 200, 255));
-//        g2d.fillRoundRect(0, 0, 20, 20, 4, 4);
-//
-//        g2d.setPaint(new Color(25, 50, 100, 255));
-//        g2d.setStroke(new BasicStroke(4));
-//        g2d.drawRoundRect(0, 0, 20, 20, 4, 4);
+            itr++;
+        }
 
-        g2d.drawImage(img, 0, 0, null);
+        itr = 1000 - itr;
+
+        int color = (int) (Math.log(itr) * Math.log(1000) * 255);
+
+        return new int[]{color, color, color, 255};
     }
 
     public static void main(String[] args) {
@@ -170,14 +173,30 @@ public class Main extends JPanel implements Runnable, MouseListener {
 
     }
 
+    int start_x;
+    int start_y;
+    int end_x;
+    int end_y;
+    boolean dragging;
     @Override
     public void mousePressed(MouseEvent e) {
+        start_x = e.getX();
+        start_y = e.getY();
+        
+        dragging = true;
+    }
 
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        // redraw I guess
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-
+        end_x = e.getX();
+        end_y = e.getY();
+        
+        dragging = false;
     }
 
     @Override
@@ -187,6 +206,11 @@ public class Main extends JPanel implements Runnable, MouseListener {
 
     @Override
     public void mouseExited(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
 
     }
 }
