@@ -99,6 +99,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
         // frame.setSize(frameWidth, frameHeight);
 
+        renderFractal();
         repaint();
     }
 
@@ -118,15 +119,23 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         );
         g2d.setRenderingHints(rh);
 
-        // draw
-//        g2d.setPaint(new Color(50, 100, 200, 255));
-//        g2d.fillRoundRect(0, 0, 20, 20, 4, 4);
-//
-//        g2d.setPaint(new Color(25, 50, 100, 255));
-//        g2d.setStroke(new BasicStroke(4));
-//        g2d.drawRoundRect(0, 0, 20, 20, 4, 4);
-
         g2d.drawImage(img, 0, 0, null);
+
+        if(dragging){
+            int[] box = getBox();
+
+            int dsx = box[0];
+            int dex = box[1];
+            int dsy = box[2];
+            int dey = box[3];
+
+            System.out.println(dsx + ", " + dsy + " | " + dex + ", " + dey);
+            System.out.println(start_x + ", " + start_y + " | " + end_x + ", " + end_y);
+
+            g2d.setPaint(new Color(25, 50, 100, 255));
+            g2d.setStroke(new BasicStroke(2));
+            g2d.drawRoundRect(dsx, dsy, dex - dsx, dey - dsy, 0, 0);
+        }
     }
 
     private void renderFractal() {
@@ -138,13 +147,10 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         double dh = 1.0 / height;
         double dw = 1.0 / width;
 
-        double ww = (Math.abs(X_SCALE_MAX) + Math.abs(X_SCALE_MIN));
-        double hh = (Math.abs(Y_SCALE_MAX) + Math.abs(Y_SCALE_MIN));
         for(int y = 0; y < height; y++){
             for(int x = 0; x < width; x++){
-
-                double scaledX = (((double) x * dw) * ww) + X_SCALE_MIN;
-                double scaledY = (((double) y * dh) * hh) + Y_SCALE_MIN;
+                double scaledY = y_view_min + ((y_view_max - y_view_min) / height) * y;
+                double scaledX = x_view_min + ((x_view_max - x_view_min) / width ) * x;
 
                 int[] fill = renderPixel(scaledX, scaledY);
 
@@ -153,21 +159,13 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         }
     }
 
-    /*
-    int height = data.getHeight();
-    int width = data.getWidth();
-
-    double dh = 1.0 / height;
-    double dw = 1.0 / width;
-
-    double ww = (Math.abs(X_SCALE_MAX) + Math.abs(X_SCALE_MIN));
-    double hh = (Math.abs(Y_SCALE_MAX) + Math.abs(Y_SCALE_MIN));
     private double scaleX(double x){
-        double scaledX = ((x * dw) * ww) + X_SCALE_MIN;
-        double scaledY = ((y * dh) * hh) + Y_SCALE_MIN;
+        return x_view_min + ((x_view_max - x_view_min) / 800) * x;
     }
 
-     */
+    private double scaleY(double y){
+        return y_view_min + ((y_view_max - y_view_min) / 800) * y;
+    }
 
     private int[] renderPixel(double scaledX, double scaledY) {
         double a = 0.0;
@@ -215,18 +213,65 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
     @Override
     public void mouseDragged(MouseEvent e) {
+        end_x = e.getX();
+        end_y = e.getY();
+
         this.repaint(new Rectangle(0, 0, frameWidth, frameHeight));
-        // redraw I guess
+    }
+
+    int[] getBox(){
+        int dsx = start_x;
+        int dex = end_x;
+        int dsy = start_y;
+        int dey = end_y;
+        if(end_x < start_x){
+            dsx = end_x;
+            dex = start_x;
+        }
+        if(end_y < start_y){
+            dsy = end_y;
+            dey = start_y;
+        }
+
+        int max = Math.max(dex - dsx, dey - dsy);
+
+        dex = dsx + max;
+        dey = dsy + max;
+
+        return new int[]{dsx, dex, dsy, dey};
+    }
+
+    double[] getScaledBox(){
+        int[] box = getBox();
+
+        int dsx = box[0];
+        int dex = box[1];
+        int dsy = box[2];
+        int dey = box[3];
+
+        double scaledStartX = scaleX(dsx);
+        double scaledStartY = scaleY(dsy);
+
+        double scaledEndX = scaleX(dex);
+        double scaledEndY = scaleY(dey);
+
+        return new double[]{ scaledStartX, scaledStartY, scaledEndX, scaledEndY };
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
         end_x = e.getX();
         end_y = e.getY();
-        
         dragging = false;
 
-        // System.out.println("Allegedly, the mouse has been released");
+        double[] scaledBox = getScaledBox();
+
+        x_view_min = scaledBox[0];
+        y_view_min = scaledBox[1];
+        x_view_max = scaledBox[2];
+        y_view_max = scaledBox[3];
+
+        this.repaint(new Rectangle(0, 0, frameWidth, frameHeight));
 
         renderFractal();
     }
