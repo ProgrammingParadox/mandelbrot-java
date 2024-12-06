@@ -6,10 +6,9 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
-import java.util.ArrayList;
 
 public class Main extends JPanel implements Runnable, MouseListener, MouseMotionListener {
-    private JFrame frame;
+    private final JFrame frame;
 
     Thread t;
 
@@ -29,9 +28,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
     double x_view_max = X_SCALE_MAX;
     double y_view_max = Y_SCALE_MAX;
 
-    public String fontName = "Trebuchet MS";
-    public int fontSize = 12;
-
+    // cached fractal image
     BufferedImage img;
 
     public Main(String name, int w, int h){
@@ -88,21 +85,21 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         t.start();
     }
 
+    // initializes
     public void run() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
-        int scrW = (int)screenSize.getWidth();
-        int scrH = (int)screenSize.getHeight();
+        int scrW = (int) screenSize.getWidth();
+        int scrH = (int) screenSize.getHeight();
 
         frameWidth = scrW;
         frameHeight = scrH;
-
-        // frame.setSize(frameWidth, frameHeight);
 
         renderFractal();
         repaint();
     }
 
+    // paint a frame (happens on repaint and stuff)
     public void paintComponent(Graphics g){
         super.paintComponent(g);
 
@@ -129,28 +126,29 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
             int dsy = box[2];
             int dey = box[3];
 
-            System.out.println(dsx + ", " + dsy + " | " + dex + ", " + dey);
-            System.out.println(start_x + ", " + start_y + " | " + end_x + ", " + end_y);
-
             g2d.setPaint(new Color(25, 50, 100, 255));
             g2d.setStroke(new BasicStroke(2));
             g2d.drawRoundRect(dsx, dsy, dex - dsx, dey - dsy, 0, 0);
         }
     }
 
+    // write a fractal that spans the view coordinates
+    // to the buffered image
     private void renderFractal() {
         WritableRaster data = img.getRaster();
 
         int height = data.getHeight();
         int width = data.getWidth();
 
+        // division is slow, so get it out of the way
+        // and make up for it with multiplication
         double dh = 1.0 / height;
         double dw = 1.0 / width;
 
         for(int y = 0; y < height; y++){
             for(int x = 0; x < width; x++){
-                double scaledY = y_view_min + ((y_view_max - y_view_min) / height) * y;
-                double scaledX = x_view_min + ((x_view_max - x_view_min) / width ) * x;
+                double scaledY = y_view_min + ((y_view_max - y_view_min) * dh) * y;
+                double scaledX = x_view_min + ((x_view_max - x_view_min) * dw) * x;
 
                 int[] fill = renderPixel(scaledX, scaledY);
 
@@ -159,14 +157,17 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         }
     }
 
+    // map an x or y coordinate to the mandelbrot set's
+    // coordinate plane
     private double scaleX(double x){
         return x_view_min + ((x_view_max - x_view_min) / 800) * x;
     }
-
     private double scaleY(double y){
         return y_view_min + ((y_view_max - y_view_min) / 800) * y;
     }
 
+    // renders a pixel from the mandelbrot set (returns
+    // and int array of the color data
     private int[] renderPixel(double scaledX, double scaledY) {
         double a = 0.0;
         double b = 0.0;
@@ -190,14 +191,10 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
     }
 
     public static void main(String[] args) {
-        Main g = new Main();
+        Main _ = new Main();
     }
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
-
-    }
-
+    // handle all the resizing
     int start_x;
     int start_y;
     int end_x;
@@ -219,6 +216,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         this.repaint(new Rectangle(0, 0, frameWidth, frameHeight));
     }
 
+    // returns a box based on the mouse positions
+    // TODO: I don't think it works all the way
     int[] getBox(){
         int dsx = start_x;
         int dex = end_x;
@@ -241,6 +240,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         return new int[]{dsx, dex, dsy, dey};
     }
 
+    // returns a box in the mandelbrot set's coordinate
+    // range based on the view
     double[] getScaledBox(){
         int[] box = getBox();
 
@@ -274,6 +275,11 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         this.repaint(new Rectangle(0, 0, frameWidth, frameHeight));
 
         renderFractal();
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+
     }
 
     @Override
