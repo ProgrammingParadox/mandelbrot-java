@@ -1,3 +1,13 @@
+/*
+
+    https://blog.nobel-joergensen.com/2010/02/13/real-time-mandelbrot-in-java-part-1/
+    https://blog.nobel-joergensen.com/2010/02/23/real-time-mandelbrot-in-java-%E2%80%93-part-2-jogl/
+
+    https://github.com/SingingBush/jogl-examples/blob/master/src/main/resources/jocl/Mandelbrot.cl
+
+    https://math.hws.edu/graphicsbook/source/jogl/TextureDemo.java
+
+*/
 
 import javax.swing.*;
 import java.awt.*;
