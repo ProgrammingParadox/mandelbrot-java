@@ -17,16 +17,15 @@ import com.jogamp.opengl.awt.GLCanvas;
 import javax.swing.JFrame;
 
 import java.awt.BorderLayout;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
+
+import java.util.ArrayList;
 
 public class Main extends JPanel implements Runnable, MouseListener, MouseMotionListener {
     private final JFrame frame;
@@ -35,6 +34,10 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
     public int frameWidth = 800;
     public int frameHeight = 800;
+
+    // store previous zooms
+    ArrayList<Double[]> zooms = new ArrayList<>();
+    ArrayList<BufferedImage> zoomImages = new ArrayList<>();
 
     // viewport max to hold whole fractal nicely
     double X_SCALE_MIN = -2.25;
@@ -70,6 +73,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
         t = new Thread(this);
         t.start();
+
+        initShortcuts();
     }
     public Main(String name){
         frame = new JFrame(name);
@@ -86,6 +91,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
         t = new Thread(this);
         t.start();
+
+        initShortcuts();
     }
     public Main(){
         frame = new JFrame("GUI");
@@ -104,6 +111,34 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
         t = new Thread(this);
         t.start();
+
+        initShortcuts();
+    }
+
+    private void initShortcuts(){
+        // Create an action to be performed
+        Action printAction = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(zooms.isEmpty()) return;
+
+                Double[] view = zooms.removeLast();
+
+                x_view_min = view[0];
+                y_view_min = view[1];
+                x_view_max = view[2];
+                y_view_max = view[3];
+
+                img = zoomImages.removeLast();
+
+                repaint(new Rectangle(0, 0, frameWidth, frameHeight));
+            }
+        };
+
+        // Create a key binding
+        KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK);
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, "printAction");
+        this.getActionMap().put("printAction", printAction);
     }
 
     // initializes
@@ -295,6 +330,14 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         }
 
         double[] scaledBox = getScaledBox();
+
+        // for ctrl + z
+        zooms.add(new Double[]{x_view_min, y_view_min, x_view_max, y_view_max});
+
+        ColorModel cm = img.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = img.copyData(null);
+        zoomImages.add(new BufferedImage(cm, raster, isAlphaPremultiplied, null));
 
         x_view_min = scaledBox[0];
         y_view_min = scaledBox[1];
