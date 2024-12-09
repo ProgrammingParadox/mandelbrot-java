@@ -9,16 +9,8 @@
 
 */
 
-import com.jogamp.opengl.GLAutoDrawable;
-import com.jogamp.opengl.GLEventListener;
-import com.jogamp.opengl.GLProfile;
-import com.jogamp.opengl.GLCapabilities;
-import com.jogamp.opengl.awt.GLCanvas;
 import javax.swing.JFrame;
-
-import java.awt.BorderLayout;
 import java.awt.event.*;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -316,6 +308,14 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         return new double[]{ scaledStartX, scaledStartY, scaledEndX, scaledEndY };
     }
 
+    public BufferedImage copyBuffer(BufferedImage h){
+        ColorModel cm = h.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = h.copyData(null);
+
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
+    }
+
     @Override
     public void mouseReleased(MouseEvent e) {
         end_x = e.getX();
@@ -333,11 +333,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
         // for ctrl + z
         zooms.add(new Double[]{x_view_min, y_view_min, x_view_max, y_view_max});
-
-        ColorModel cm = img.getColorModel();
-        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
-        WritableRaster raster = img.copyData(null);
-        zoomImages.add(new BufferedImage(cm, raster, isAlphaPremultiplied, null));
+        zoomImages.add(copyBuffer(img));
 
         x_view_min = scaledBox[0];
         y_view_min = scaledBox[1];
