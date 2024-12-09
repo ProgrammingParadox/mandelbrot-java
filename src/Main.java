@@ -24,12 +24,19 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
     Thread t;
 
+    int MAX_ITERATIONS = 2000;
+
     public int frameWidth = 800;
     public int frameHeight = 800;
 
-    // store previous zooms
-    ArrayList<Double[]> zooms = new ArrayList<>();
-    ArrayList<BufferedImage> zoomImages = new ArrayList<>();
+    // store previous zooms for ctrl+z
+    ArrayList<Double[]> previousZooms = new ArrayList<>();
+    ArrayList<BufferedImage> previousZoomImages = new ArrayList<>();
+
+    // store undone zooms for ctrl+shift+z/ctrl+y
+    ArrayList<Double[]> undoneZooms = new ArrayList<>();
+    ArrayList<BufferedImage> undoneZoomImages = new ArrayList<>();
+
 
     // viewport max to hold whole fractal nicely
     double X_SCALE_MIN = -2.25;
@@ -108,29 +115,62 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
     }
 
     private void initShortcuts(){
-        // Create an action to be performed
-        Action printAction = new AbstractAction() {
+        InputMap inputMap = this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = this.getActionMap();
+
+        Action undo = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(zooms.isEmpty()) return;
+                if(previousZooms.isEmpty()) return;
 
-                Double[] view = zooms.removeLast();
+                Double[] view = previousZooms.removeLast();
+
+                undoneZooms.add(view);
 
                 x_view_min = view[0];
                 y_view_min = view[1];
                 x_view_max = view[2];
                 y_view_max = view[3];
 
-                img = zoomImages.removeLast();
+                undoneZoomImages.add(copyBuffer(img));
+                img = previousZoomImages.removeLast();
 
                 repaint(new Rectangle(0, 0, frameWidth, frameHeight));
             }
         };
 
-        // Create a key binding
-        KeyStroke keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK);
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, "printAction");
-        this.getActionMap().put("printAction", printAction);
+        KeyStroke ctrlz = KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK);
+        inputMap.put(ctrlz, "undo");
+        actionMap.put("undo", undo);
+
+        Action redo = new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(undoneZooms.isEmpty()) return;
+
+                Double[] view = undoneZooms.removeLast();
+
+                previousZooms.add(view);
+
+                x_view_min = view[0];
+                y_view_min = view[1];
+                x_view_max = view[2];
+                y_view_max = view[3];
+
+                previousZoomImages.add(copyBuffer(img));
+                img = undoneZoomImages.removeLast();
+
+                repaint(new Rectangle(0, 0, frameWidth, frameHeight));
+            }
+        };
+
+        KeyStroke ctrly = KeyStroke.getKeyStroke(KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK);
+        KeyStroke ctrlsz = KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK);
+
+        inputMap.put(ctrly, "redo");
+        inputMap.put(ctrlsz, "redo");
+
+        actionMap.put("redo", redo);
     }
 
     // initializes
@@ -222,7 +262,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         int itr = 0;
         while(
                 (a * a) + (b * b) <= 4 &&
-                        itr < 1000 // (max itr)
+                        itr < MAX_ITERATIONS
         ){
             double temp = (a * a) - (b * b) + scaledX;
             b = 2 * a * b + scaledY;
@@ -231,11 +271,11 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
             itr++;
         }
 
-        itr = 1000 - itr;
+        itr = MAX_ITERATIONS - itr;
 
         int color = (int) (Math.log(itr) * Math.log(1000) * 255);
 
-        return new int[]{color, color, color, 255};
+        return new int[]{color, (int) (color * 0.5), (int) (color * 0.25), 255};
     }
 
     public static void main(String[] args) {
@@ -332,8 +372,11 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         double[] scaledBox = getScaledBox();
 
         // for ctrl + z
-        zooms.add(new Double[]{x_view_min, y_view_min, x_view_max, y_view_max});
-        zoomImages.add(copyBuffer(img));
+        previousZooms.add(new Double[]{x_view_min, y_view_min, x_view_max, y_view_max});
+        previousZoomImages.add(copyBuffer(img));
+
+        undoneZooms.clear();
+        undoneZoomImages.clear();
 
         x_view_min = scaledBox[0];
         y_view_min = scaledBox[1];
