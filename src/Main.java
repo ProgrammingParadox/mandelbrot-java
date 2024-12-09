@@ -25,6 +25,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
 
+import java.nio.Buffer;
 import java.util.ArrayList;
 
 public class Main extends JPanel implements Runnable, MouseListener, MouseMotionListener {
@@ -316,6 +317,14 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         return new double[]{ scaledStartX, scaledStartY, scaledEndX, scaledEndY };
     }
 
+    public BufferedImage copyBuffer(BufferedImage h){
+        ColorModel cm = img.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = img.copyData(null);
+
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
+    }
+
     @Override
     public void mouseReleased(MouseEvent e) {
         end_x = e.getX();
@@ -333,11 +342,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
         // for ctrl + z
         zooms.add(new Double[]{x_view_min, y_view_min, x_view_max, y_view_max});
-
-        ColorModel cm = img.getColorModel();
-        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
-        WritableRaster raster = img.copyData(null);
-        zoomImages.add(new BufferedImage(cm, raster, isAlphaPremultiplied, null));
+        zoomImages.add(copyBuffer(img));
 
         x_view_min = scaledBox[0];
         y_view_min = scaledBox[1];
