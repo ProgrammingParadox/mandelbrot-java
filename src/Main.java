@@ -65,8 +65,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        frame.addMouseListener(this);
-        frame.addMouseMotionListener(this);
+        this.addMouseListener(this);
+        this.addMouseMotionListener(this);
 
         t = new Thread(this);
         t.start();
@@ -81,8 +81,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         frame.setVisible(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        frame.addMouseListener(this);
-        frame.addMouseMotionListener(this);
+        this.addMouseListener(this);
+        this.addMouseMotionListener(this);
 
         t = new Thread(this);
         t.start();
@@ -99,8 +99,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // events
-        frame.addMouseListener(this);
-        frame.addMouseMotionListener(this);
+        this.addMouseListener(this);
+        this.addMouseMotionListener(this);
 
         t = new Thread(this);
         t.start();
@@ -148,7 +148,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
             int dey = box[3];
 
             g2d.setPaint(new Color(25, 50, 100, 255));
-            g2d.setStroke(new BasicStroke(2));
+            g2d.setStroke(new BasicStroke(1));
             g2d.drawRoundRect(dsx, dsy, dex - dsx, dey - dsy, 0, 0);
         }
     }
@@ -258,7 +258,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         dex = dsx + max;
         dey = dsy + max;
 
-        return new int[]{dsx, dex, dsy, dey};
+        // (0, 2), (1, 3)
+        return new int[]{ dsx, dex, dsy, dey };
     }
 
     // returns a box in the mandelbrot set's coordinate
@@ -285,6 +286,13 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         end_x = e.getX();
         end_y = e.getY();
         dragging = false;
+
+        int[] box = getBox();
+        if((box[1] - box[0]) * (box[3] - box[2]) < 50){
+            dragging = false;
+
+            return;
+        }
 
         double[] scaledBox = getScaledBox();
 
