@@ -24,7 +24,17 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
     Thread t;
 
-    int MAX_ITERATIONS = 2000;
+    int MAX_ITERATIONS = 1000;
+
+    ControlPanel controlPanel = new ControlPanel(new ControlPanelEventHandler() {
+        @Override
+        public void onMaxItrChange(int maxItr) {
+            MAX_ITERATIONS = maxItr;
+
+            renderFractal();
+            frame.repaint();
+        }
+    });
 
     public int frameWidth = 800;
     public int frameHeight = 800;
