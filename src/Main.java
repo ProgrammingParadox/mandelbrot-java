@@ -22,19 +22,13 @@ import java.util.ArrayList;
 public class Main extends JPanel implements Runnable, MouseListener, MouseMotionListener {
     private final JFrame frame;
 
+    private JMenuBar menuBar;
+
     Thread t;
 
     int MAX_ITERATIONS = 1000;
 
-    ControlPanel controlPanel = new ControlPanel(new ControlPanelEventHandler() {
-        @Override
-        public void onMaxItrChange(int maxItr) {
-            MAX_ITERATIONS = maxItr;
-
-            renderFractal();
-            frame.repaint();
-        }
-    });
+    ControlPanel controlPanel;
 
     public int frameWidth = 800;
     public int frameHeight = 800;
@@ -83,7 +77,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         t = new Thread(this);
         t.start();
 
-        initShortcuts();
+        init();
     }
     public Main(String name){
         frame = new JFrame(name);
@@ -101,7 +95,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         t = new Thread(this);
         t.start();
 
-        initShortcuts();
+        init();
     }
     public Main(){
         frame = new JFrame("GUI");
@@ -120,6 +114,17 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
         t = new Thread(this);
         t.start();
+
+        init();
+    }
+
+    private void init(){
+        controlPanel = new ControlPanel(maxItr -> {
+            MAX_ITERATIONS = maxItr;
+
+            renderFractal();
+            frame.repaint();
+        });
 
         initShortcuts();
     }
@@ -149,7 +154,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
             }
         };
 
-        KeyStroke ctrlz = KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK);
+        /* KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK */
+        KeyStroke ctrlz = KeyStroke.getKeyStroke('z');
         inputMap.put(ctrlz, "undo");
         actionMap.put("undo", undo);
 
@@ -174,8 +180,11 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
             }
         };
 
-        KeyStroke ctrly = KeyStroke.getKeyStroke(KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK);
-        KeyStroke ctrlsz = KeyStroke.getKeyStroke(KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK);
+        /* KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK */
+        KeyStroke ctrly = KeyStroke.getKeyStroke("Y");
+
+        /* KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK */
+        KeyStroke ctrlsz = KeyStroke.getKeyStroke("shift Z");
 
         inputMap.put(ctrly, "redo");
         inputMap.put(ctrlsz, "redo");

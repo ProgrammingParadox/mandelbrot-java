@@ -4,12 +4,17 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 
 public class ControlPanel {
     JFrame frame;
     JPanel panel;
 
     ControlPanelEventHandler eventHandler;
+
+    JMenuBar menuBar;
 
     private void add(
             Component c,
@@ -60,6 +65,32 @@ public class ControlPanel {
                 eventHandler.onMaxItrChange((Integer) spinner.getModel().getValue());
             }
         });
+
+        menuBar = new JMenuBar();
+
+        JMenu menu = new JMenu("File");
+        menu.setMnemonic(KeyEvent.VK_F);
+        menu.getAccessibleContext().setAccessibleDescription("File Menu");
+        menuBar.add(menu);
+
+        JMenuItem menuItem = new JMenuItem(
+                "Undo Control Panel Action",
+                KeyEvent.VK_Z | KeyEvent.CTRL_DOWN_MASK
+        );
+        menuItem.setAccelerator(KeyStroke.getKeyStroke(
+                KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK
+        ));
+        menuItem.getAccessibleContext().setAccessibleDescription(
+                "This doesn't really do anything");
+        menu.add(menuItem);
+
+        menu = new JMenu("Render");
+        menu.setMnemonic(KeyEvent.VK_N);
+        menu.getAccessibleContext().setAccessibleDescription(
+                "This menu does nothing");
+        menuBar.add(menu);
+
+        frame.setJMenuBar(menuBar);
 
         frame.add(panel);
         frame.setSize(300, 100);
