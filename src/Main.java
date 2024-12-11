@@ -241,7 +241,12 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
     // write a fractal that spans the view coordinates
     // to the buffered image
+    boolean rendering = false;
     private void renderFractal() {
+        if(rendering) return; // idk man just in case
+
+        rendering = true;
+
         WritableRaster data = img.getRaster();
 
         int height = data.getHeight();
@@ -262,6 +267,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
                 data.setPixel(x, y, fill);
             }
         }
+
+        rendering = false;
     }
 
     // map an x or y coordinate to the mandelbrot set's
@@ -380,6 +387,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         end_x = e.getX();
         end_y = e.getY();
         dragging = false;
+
+        if(rendering) return;
 
         int[] box = getBox();
         if((box[1] - box[0]) * (box[3] - box[2]) < 50){

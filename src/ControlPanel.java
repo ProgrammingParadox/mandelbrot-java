@@ -66,6 +66,7 @@ public class ControlPanel {
             }
         });
 
+        /*
         menuBar = new JMenuBar();
 
         JMenu menu = new JMenu("File");
@@ -91,6 +92,7 @@ public class ControlPanel {
         menuBar.add(menu);
 
         frame.setJMenuBar(menuBar);
+        */
 
         frame.add(panel);
         frame.setSize(300, 100);
