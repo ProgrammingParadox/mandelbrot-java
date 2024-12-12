@@ -19,8 +19,10 @@ import java.awt.image.WritableRaster;
 
 import java.util.ArrayList;
 
-public class Main extends JPanel implements Runnable, MouseListener, MouseMotionListener {
+public class Explorer extends JPanel implements Runnable, MouseListener, MouseMotionListener {
     private final JFrame frame;
+
+    ExploreEventHandler exploreHandler;
 
     private JMenuBar menuBar;
 
@@ -43,11 +45,11 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
 
     // viewport max to hold whole fractal nicely
-    double X_SCALE_MIN = -2.25;
-    double X_SCALE_MAX = 0.75;
+    final double X_SCALE_MIN = -2.25;
+    final double X_SCALE_MAX = 0.75;
 
-    double Y_SCALE_MIN = -1.5;
-    double Y_SCALE_MAX = 1.5;
+    final double Y_SCALE_MIN = -1.5;
+    final double Y_SCALE_MAX = 1.5;
 
     // viewport size init to whole fractal
     double x_view_min = X_SCALE_MIN;
@@ -58,7 +60,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
     // cached fractal image
     BufferedImage img;
 
-    public Main(String name, int w, int h){
+    public Explorer(String name, int w, int h){
         frame = new JFrame(name);
 
         img = new BufferedImage(frameWidth, frameHeight, BufferedImage.TYPE_INT_RGB);
@@ -79,7 +81,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
         init();
     }
-    public Main(String name){
+    public Explorer(String name){
         frame = new JFrame(name);
 
         img = new BufferedImage(frameWidth, frameHeight, BufferedImage.TYPE_INT_RGB);
@@ -97,7 +99,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
 
         init();
     }
-    public Main(){
+    public Explorer(){
         frame = new JFrame("GUI");
 
         img = new BufferedImage(frameWidth, frameHeight, BufferedImage.TYPE_INT_RGB);
@@ -118,13 +120,31 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         init();
     }
 
-    private void init(){
-        controlPanel = new ControlPanel(maxItr -> {
-            MAX_ITERATIONS = maxItr;
+    public void setExploreEventHandler(ExploreEventHandler eh){
+        this.exploreHandler = eh;
+    }
 
-            renderFractal();
-            frame.repaint();
-        });
+    private void init(){
+        controlPanel = new ControlPanel(new ControlPanelEventHandler() {
+            @Override
+            public void onMaxItrChange(int maxItr) {
+                MAX_ITERATIONS = maxItr;
+
+                renderFractal();
+                frame.repaint();
+            }
+
+            @Override
+            public void onViewChanged(double sx, double sy, double ex, double ey) {
+                x_view_min = sx;
+                y_view_min = sx;
+                x_view_max = ex;
+                y_view_max = ex;
+
+                renderFractal();
+                frame.repaint();
+            }
+        }, this);
 
         initShortcuts();
     }
@@ -305,7 +325,7 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
     }
 
     public static void main(String[] args) {
-        Main _ = new Main();
+        Explorer _ = new Explorer();
     }
 
     // handle all the resizing
@@ -410,6 +430,8 @@ public class Main extends JPanel implements Runnable, MouseListener, MouseMotion
         y_view_min = scaledBox[1];
         x_view_max = scaledBox[2];
         y_view_max = scaledBox[3];
+
+        exploreHandler.onViewChanged(x_view_min, y_view_min, x_view_max, y_view_max);
 
         this.repaint(new Rectangle(0, 0, frameWidth, frameHeight));
 

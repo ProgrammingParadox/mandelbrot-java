@@ -4,15 +4,17 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
 
 public class ControlPanel {
     JFrame frame;
     JPanel panel;
 
     ControlPanelEventHandler eventHandler;
+
+    double x_view_min;
+    double y_view_min;
+    double x_view_max;
+    double y_view_max;
 
     JMenuBar menuBar;
 
@@ -28,6 +30,9 @@ public class ControlPanel {
         g.gridx = gridx;
         g.gridy = gridy;
 
+        //g.gridx = GridBagConstraints.RELATIVE;
+        //g.gridy = GridBagConstraints.RELATIVE;
+
         g.gridwidth = gridwidth;
         g.gridheight = gridheight;
 
@@ -37,7 +42,34 @@ public class ControlPanel {
         container.add(c);
     }
 
-    ControlPanel(ControlPanelEventHandler eventHandler) {
+    private void spinner(
+            String labelText,
+
+            double initVal, double minVal, double maxVal, double stepSize,
+
+            int gx, int gy, int gw, int gh,
+
+            ChangeListener l
+    ) {
+        GridBagConstraints info = new GridBagConstraints();
+        info.fill = GridBagConstraints.BOTH;
+
+        GridBagLayout gridLayout = new GridBagLayout();
+
+        JLabel label = new JLabel(labelText);
+
+        SpinnerNumberModel itrModel = new SpinnerNumberModel(initVal, minVal, maxVal, stepSize);
+        JSpinner itrSpinner = new JSpinner(itrModel);
+
+        gridLayout.setConstraints(itrSpinner, info);
+
+        add(label     , panel, gridLayout, info, gx, gy, gw, gh);
+        add(itrSpinner, panel, gridLayout, info, gx + 1, gy, gw, gh);
+
+        itrSpinner.addChangeListener(l);
+    }
+
+    ControlPanel(ControlPanelEventHandler eventHandler, Explorer explorer) {
         this.eventHandler = eventHandler;
 
         frame = new JFrame();
@@ -50,19 +82,42 @@ public class ControlPanel {
 
         panel = new JPanel(gridLayout);
 
-        JLabel label = new JLabel("Max Iterations:");
+        // max iterations
+        spinner(
+                "Max Iterations: ",
 
-        SpinnerNumberModel itrModel = new SpinnerNumberModel(1000, 0, 1000000, 1);
-        JSpinner spinner = new JSpinner(itrModel);
+                1000, 0, 1000000, 1,
 
-        gridLayout.setConstraints(spinner, info);
+                0, 0, 1, 1,
 
-        add(label  , panel, gridLayout, info, 0, 0, 1, 1);
-        add(spinner, panel, gridLayout, info, 1, 0, 1, 1);
+                e -> eventHandler.onMaxItrChange((int) (double) ((JSpinner) e.getSource()).getModel().getValue())
+        );
 
-        spinner.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
-                eventHandler.onMaxItrChange((Integer) spinner.getModel().getValue());
+//        // viewport
+//        spinner(
+//                "X min",
+//
+//                explorer.x_view_min, explorer.X_SCALE_MIN, explorer.X_SCALE_MAX, 0.0001,
+//
+//                0, 1, 2, 1,
+//
+//                e -> eventHandler.onViewChanged(
+//                        (Double) ((JSpinner) e.getSource()).getModel().getValue(),
+//
+//                        explorer.y_view_min,
+//                        explorer.x_view_max,
+//                        explorer.y_view_max
+//                )
+//        );
+
+
+        explorer.setExploreEventHandler(new ExploreEventHandler() {
+            @Override
+            public void onViewChanged(double sx, double sy, double ex, double ey) {
+                x_view_min = sx;
+                y_view_min = sy;
+                x_view_max = ex;
+                y_view_max = ey;
             }
         });
 
@@ -106,6 +161,11 @@ public class ControlPanel {
             public void onMaxItrChange(int maxItr) {
                 System.out.println("New maxItr: " + maxItr);
             }
-        });
+
+            @Override
+            public void onViewChanged(double sx, double sy, double ex, double ey) {
+
+            }
+        }, new Explorer());
     }
 }
